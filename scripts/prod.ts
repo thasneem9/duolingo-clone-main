@@ -217,8 +217,7 @@ order: 1,
 {
 lessonId: lesson.id,
 type: "GESTURE",
-question: "Show the sign for number 8",
-imageSrc: "/gestures/eight.png",
+question: "Show the ISL gesture for the Number 8",
 order: 2,
 }
 ]).returning();
