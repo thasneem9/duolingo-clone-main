@@ -48,6 +48,7 @@ export const Quiz = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [correctAudio, _c, correctControls] = useAudio({ src: "/correct.wav" });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [checking, setChecking] = useState(false);
 
   const [incorrectAudio, _i, incorrectControls] = useAudio({
     src: "/incorrect.wav",
@@ -83,7 +84,9 @@ export const Quiz = ({
   });
 
   const [selectedOption, setSelectedOption] = useState<number>();
+  const selectedOptionRef = useRef<number | undefined>(undefined);
   const [status, setStatus] = useState<"none" | "wrong" | "correct">("none");
+  
 
 
   const challenge = challenges[activeIndex];
@@ -93,69 +96,120 @@ export const Quiz = ({
     setActiveIndex((current) => current + 1);
   };
 
-  const onSelect = (id: number) => {
-  if (status !== "none" || selectedOption) return;
-  setSelectedOption(id);
+const onSelect = (id: number) => {
+  if (status !== "none") return;
+  if (selectedOptionRef.current) return;
+
+  console.log("🧩 Option selected:", id);
+
+  selectedOptionRef.current = id;   // store immediately
+  setSelectedOption(id);            // React state
 };
 
-  const onContinue = () => {
-    if (!selectedOption) return;
+const onContinue = (correct?: boolean) => {
+  console.log("🟦 CHECK button clicked");
 
-    if (status === "wrong") {
-      setStatus("none");
-      setSelectedOption(undefined);
-      return;
-    }
+  console.log("status:", status);
 
-    if (status === "correct") {
+  if (checking) return;
+ if (challenge.type === "GESTURE") {
+   if (status === "wrong") {
+    setStatus("none");
+    return;
+  }
+  console.log("Gesture result:", correct);
+
+  if (correct) {
+    void correctControls.play();
+    setStatus("correct");
+
+    setTimeout(() => {
       onNext();
       setStatus("none");
-      setSelectedOption(undefined);
-      return;
-    }
+    }, 800);
 
-    const correctOption = options.find((option) => option.correct);
+  } else {
+    void incorrectControls.play();
+    setStatus("wrong");
+  }
 
-    if (!correctOption) return;
+  return;
+}
+ 
+const option = selectedOptionRef.current;
 
-    if (correctOption.id === selectedOption) {
-      startTransition(() => {
-        upsertChallengeProgress(challenge.id)
-          .then((response) => {
-            if (response?.error === "hearts") {
-              openHeartsModal();
-              return;
-            }
+console.log("selectedOption:", option);
 
-            void correctControls.play();
-            setStatus("correct");
-            setPercentage((prev) => prev + 100 / challenges.length);
+if (!option) return;
+  setChecking(true);
 
-            // This is a practice
-            if (initialPercentage === 100) {
-              setHearts((prev) => Math.min(prev + 1, MAX_HEARTS));
-            }
-          })
-          .catch(() => toast.error("Something went wrong. Please try again."));
-      });
-    } else {
-      startTransition(() => {
-        reduceHearts(challenge.id)
-          .then((response) => {
-            if (response?.error === "hearts") {
-              openHeartsModal();
-              return;
-            }
+  if (status === "wrong") {
+    setStatus("none");
+   setSelectedOption(undefined);
+selectedOptionRef.current = undefined;
+    setChecking(false);
+    return;
+  }
 
-            void incorrectControls.play();
-            setStatus("wrong");
+  if (status === "correct") {
+    onNext();
+    setStatus("none");
+    setSelectedOption(undefined);
+selectedOptionRef.current = undefined;
+    setChecking(false);
+    return;
+  }
 
-            if (!response?.error) setHearts((prev) => Math.max(prev - 1, 0));
-          })
-          .catch(() => toast.error("Something went wrong. Please try again."));
-      });
-    }
-  };
+  const correctOption = options.find((option) => option.correct);
+
+  if (!correctOption) {
+    setChecking(false);
+    return;
+  }
+
+  if (correctOption.id === option) {
+    console.log("✅ Correct answer");
+
+    startTransition(() => {
+      upsertChallengeProgress(challenge.id)
+        .then((response) => {
+          if (response?.error === "hearts") {
+            openHeartsModal();
+            return;
+          }
+
+          void correctControls.play();
+          setStatus("correct");
+          setPercentage((prev) => prev + 100 / challenges.length);
+
+          if (initialPercentage === 100) {
+            setHearts((prev) => Math.min(prev + 1, MAX_HEARTS));
+          }
+        })
+        .finally(() => setChecking(false));
+    });
+
+  } else {
+    console.log("❌ Wrong answer");
+
+    startTransition(() => {
+      reduceHearts(challenge.id)
+        .then((response) => {
+          if (response?.error === "hearts") {
+            openHeartsModal();
+            return;
+          }
+
+          void incorrectControls.play();
+          setStatus("wrong");
+
+          if (!response?.error)
+            setHearts((prev) => Math.max(prev - 1, 0));
+        })
+        .finally(() => setChecking(false));
+    });
+  }
+};
 
   if (!challenge) {
     return (

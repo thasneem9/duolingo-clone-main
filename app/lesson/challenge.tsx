@@ -9,7 +9,7 @@ import { useRef } from "react";
 type ChallengeProps = {
   options: (typeof challengeOptions.$inferSelect)[];
   onSelect: (id: number) => void;
-  onContinue: () => void;
+onContinue: (correct?: boolean) => void;
   status: "correct" | "wrong" | "none";
   selectedOption?: number;
   disabled?: boolean;
@@ -30,7 +30,7 @@ export const Challenge = ({
   gestureRef,
 }: ChallengeProps) => {
   
-  if (type === "GESTURE") {
+ if (type === "GESTURE") {
   return (
     <div className="flex flex-col items-center gap-6">
 
@@ -38,22 +38,14 @@ export const Challenge = ({
         <img src={imageSrc} className="h-40 rounded-xl" />
       )}
 
-<GestureCamera
-  target="8"
-  onGesture={(correct) => {
-    const option = options.find((o) => o.correct === correct);
-    if (!option) return;
-
-    onSelect(option.id);
-
-    // evaluate answer immediately
-    setTimeout(() => {
-      onContinue();
-    }, 0);
+    <GestureCamera
+  key={status}   // forces reset
+  expectedGesture="8"
+  onResult={(correct) => {
+    console.log("🎯 Gesture result:", correct);
+    onContinue(correct);
   }}
 />
-
-    
 
     </div>
   );

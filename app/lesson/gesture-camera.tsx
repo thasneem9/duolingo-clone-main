@@ -9,11 +9,11 @@ import {
 } from "@mediapipe/tasks-vision";
 
 type Props = {
-  target: string;
-  onGesture: (correct: boolean) => void;
+  expectedGesture: string;
+  onResult: (correct: boolean) => void;
 };
 
-export const GestureCamera = ({ target, onGesture }: Props) => {
+export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
   const webcamRef = useRef<Webcam>(null);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
   const latestGesture = useRef<boolean | null>(null);
@@ -63,16 +63,29 @@ const handleCapture = () => {
 
           const palmFacing = Math.abs(landmarks[5].x - landmarks[17].x) > 0.04;
 
-          const correct =
-            target === "8" &&
-            palmFacing &&
-            thumbUp &&
-            indexUp &&
-            middleUp &&
-            !ringUp &&
-            !pinkyUp;
+         const correct =
+  expectedGesture === "8"&&
+  palmFacing &&
+  thumbUp &&
+  indexUp &&
+  middleUp &&
+  !ringUp &&
+  !pinkyUp;
 
-          latestGesture.current = correct;
+// freeze detection after capture
+if (!clicked) {
+  latestGesture.current = correct;
+}
+
+console.log("---- Gesture Analysis ----");
+console.log("thumbUp:", thumbUp);
+console.log("indexUp:", indexUp);
+console.log("middleUp:", middleUp);
+console.log("ringUp:", ringUp);
+console.log("pinkyUp:", pinkyUp);
+console.log("palmFacing:", palmFacing);
+console.log("Detected correct:", correct);
+console.log("-------------------------");
         }
 
         requestAnimationFrame(detect);
@@ -82,16 +95,24 @@ const handleCapture = () => {
     };
 
     init();
-  }, [target]);
+  }, [expectedGesture]);
+  useEffect(() => {
+  setClicked(false);
+  latestGesture.current = null;
+}, [expectedGesture]);
 
-  const checkGesture = () => {
-    if (latestGesture.current === null) {
-      onGesture(false);
-      return;
-    }
+const checkGesture = () => {
+  console.log("📸 CHECK pressed");
 
-    onGesture(latestGesture.current);
-  };
+  if (latestGesture.current === null) {
+    console.log("❌ No gesture detected");
+    onResult(false);
+    return;
+  }
+
+  console.log("🤚 Gesture detected:", latestGesture.current);
+  onResult(latestGesture.current);
+};
 
   return (
     <div className="flex flex-col items-center gap-3">

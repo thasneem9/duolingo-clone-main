@@ -70,13 +70,16 @@ export const challengesEnum = pgEnum("type", [
 export const challenges = pgTable("challenges", {
   id: serial("id").primaryKey(),
   lessonId: integer("lesson_id")
-    .references(() => lessons.id, {
-      onDelete: "cascade",
-    })
+    .references(() => lessons.id, { onDelete: "cascade" })
     .notNull(),
+
   type: challengesEnum("type").notNull(),
+
   question: text("question").notNull(),
-  imageSrc: text("image_src"), // ⭐ add this
+  imageSrc: text("image_src"),
+
+  expectedGesture: text("expected_gesture"), // NEW
+
   order: integer("order").notNull(),
 });
 
