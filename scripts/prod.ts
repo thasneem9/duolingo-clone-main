@@ -79,46 +79,24 @@ const main = async () => {
                 lessonId: lesson.id,
                 type: "SELECT",
                  question: "Try to guess what this sign means?",
-                   imageSrc: "/signs/hello.gif",
+                   imageSrc: "/signs/indian.gif",
                 order: 2,
               },
               {
                 lessonId: lesson.id,
                 type: "SELECT",
                question: "What do you think this sign means?",
-                 imageSrc: "/signs/hello.gif",
+                 imageSrc: "/signs/bye.gif",
                 order: 3,
               },
               {
                 lessonId: lesson.id,
                 type: "ASSIST",
-                question: '"the man"',
+                question: "How should you get the attention of a deaf person from behind?",
                 order: 4,
               },
-              {
-                lessonId: lesson.id,
-                type: "SELECT",
-                question: 'Which one of these is "the zombie"?',
-                order: 5,
-              },
-              {
-                lessonId: lesson.id,
-                type: "SELECT",
-                question: 'Which one of these is "the robot"?',
-                order: 6,
-              },
-              {
-                lessonId: lesson.id,
-                type: "SELECT",
-                question: 'Which one of these is "the girl"?',
-                order: 7,
-              },
-              {
-                lessonId: lesson.id,
-                type: "ASSIST",
-                question: '"the zombie"',
-                order: 8,
-              },
+           
+             
             ])
             .returning();
 
@@ -128,23 +106,23 @@ const main = async () => {
               await db.insert(schema.challengeOptions).values([
                 {
                   challengeId: challenge.id,
-                  correct: true,
-                  text: "el hombre",
-                  imageSrc: "/signs/hello.gif",
+                  correct: false,
+                  text: "Goodbye",
+               
                 
                 },
                 {
                   challengeId: challenge.id,
-                  correct: false,
-                  text: "la mujer",
-                  imageSrc: "/woman.svg",
+                  correct: true,
+                  text: "Hello",
+          
                  
                 },
                 {
                   challengeId: challenge.id,
                   correct: false,
-                  text: "el chico",
-                  imageSrc: "/boy.svg",
+                  text: "Welcome",
+        
             
                 },
               ]);
@@ -154,23 +132,22 @@ const main = async () => {
               await db.insert(schema.challengeOptions).values([
                 {
                   challengeId: challenge.id,
-                  correct: true,
-                  text: "la mujer",
-                  imageSrc: "/woman.svg",
+                  correct: false,
+                  text: "Marriage"
                 
                 },
                 {
                   challengeId: challenge.id,
                   correct: false,
-                  text: "el chico",
-                  imageSrc: "/boy.svg",
+                  text: "Bindhi",
+                
                
                 },
                 {
                   challengeId: challenge.id,
-                  correct: false,
-                  text: "el hombre",
-                  imageSrc: "/man.svg",
+                  correct: true,
+                  text: "India",
+                
                 
                 },
               ]);
@@ -180,151 +157,50 @@ const main = async () => {
               await db.insert(schema.challengeOptions).values([
                 {
                   challengeId: challenge.id,
-                  correct: false,
-                  text: "la mujer",
-                  imageSrc: "/woman.svg",
+                  correct: true,
+                  text: "Goodbye",
+         
                  
                 },
                 {
                   challengeId: challenge.id,
                   correct: false,
-                  text: "el hombre",
-                  imageSrc: "/man.svg",
+                  text: "hello",
+                
                 
                 },
                 {
                   challengeId: challenge.id,
-                  correct: true,
-                  text: "el chico",
-                  imageSrc: "/boy.svg",
+                  correct: false,
+                  text: "Good night",
+                
               
                 },
               ]);
             }
 
             if (challenge.order === 4) {
-              await db.insert(schema.challengeOptions).values([
-                {
-                  challengeId: challenge.id,
-                  correct: false,
-                  text: "la mujer",
-                 
-                },
-                {
-                  challengeId: challenge.id,
-                  correct: true,
-                  text: "el hombre",
-               
-                },
-                {
-                  challengeId: challenge.id,
-                  correct: false,
-                  text: "el chico",
-              
-                },
-              ]);
-            }
-
-            if (challenge.order === 5) {
-              await db.insert(schema.challengeOptions).values([
-                {
-                  challengeId: challenge.id,
-                  correct: false,
-                  text: "el hombre",
-                  imageSrc: "/man.svg",
-                
-                },
-                {
-                  challengeId: challenge.id,
-                  correct: false,
-                  text: "la mujer",
-                  imageSrc: "/woman.svg",
-             
-                },
-                {
-                  challengeId: challenge.id,
-                  correct: true,
-                  text: "el zombie",
-                  imageSrc: "/zombie.svg",
-               
-                },
-              ]);
-            }
-
-            if (challenge.order === 6) {
-              await db.insert(schema.challengeOptions).values([
-                {
-                  challengeId: challenge.id,
-                  correct: true,
-                  text: "el robot",
-                  imageSrc: "/robot.svg",
-               
-                },
-                {
-                  challengeId: challenge.id,
-                  correct: false,
-                  text: "el zombie",
-                  imageSrc: "/zombie.svg",
-              
-                },
-                {
-                  challengeId: challenge.id,
-                  correct: false,
-                  text: "el chico",
-                  imageSrc: "/boy.svg",
-             
-                },
-              ]);
-            }
-
-            if (challenge.order === 7) {
-              await db.insert(schema.challengeOptions).values([
-                {
-                  challengeId: challenge.id,
-                  correct: true,
-                  text: "la nina",
-                  imageSrc: "/girl.svg",
-               
-                },
-                {
-                  challengeId: challenge.id,
-                  correct: false,
-                  text: "el zombie",
-                  imageSrc: "/zombie.svg",
-               
-                },
-                {
-                  challengeId: challenge.id,
-                  correct: false,
-                  text: "el hombre",
-                  imageSrc: "/man.svg",
-              
-                },
-              ]);
-            }
-
-            if (challenge.order === 8) {
-              await db.insert(schema.challengeOptions).values([
-                {
-                  challengeId: challenge.id,
-                  correct: false,
-                  text: "la mujer",
-                 
-                },
-                {
-                  challengeId: challenge.id,
-                  correct: true,
-                  text: "el zombie",
-            
-                },
-                {
-                  challengeId: challenge.id,
-                  correct: false,
-                  text: "el chico",
-                
-                },
-              ]);
-            }
+  await db.insert(schema.challengeOptions).values([
+    {
+      challengeId: challenge.id,
+      correct: false,
+      text: "Throw something at them",
+      imageSrc: "/signs/throw.gif",
+    },
+    {
+      challengeId: challenge.id,
+      correct: true,
+      text: "Tap their shoulder gently",
+      imageSrc: "/signs/tap.gif",
+    },
+    {
+      challengeId: challenge.id,
+      correct: false,
+      text: "Make Loud noise",
+      imageSrc: "/signs/loud-clap.gif",
+    },
+  ]);
+}
           }
         }
       }

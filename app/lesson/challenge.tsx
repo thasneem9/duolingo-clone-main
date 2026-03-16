@@ -39,17 +39,18 @@ export const Challenge = ({
       )}
     >
       {options.map((option, i) => (
-        <Card
-          key={option.id}
-          id={option.id}
-          text={option.text}
-          shortcut={`${i + 1}`}
-          selected={selectedOption === option.id}
-          onClick={() => onSelect(option.id)}
-          status={status}
-          disabled={disabled}
-          type={type}
-        />
+      <Card
+  key={option.id}
+  id={option.id}
+  text={option.text}
+  imageSrc={option.imageSrc}
+  shortcut={`${i + 1}`}
+  selected={selectedOption === option.id}
+  onClick={() => onSelect(option.id)}
+  status={status}
+  disabled={disabled}
+  type={type}
+/>
       ))}
     </div>
   </>
