@@ -46,7 +46,7 @@ CREATE TABLE "units" (
 CREATE TABLE "user_progress" (
 	"user_id" text PRIMARY KEY NOT NULL,
 	"user_name" text DEFAULT 'User' NOT NULL,
-	"user_image_src" text DEFAULT '/mascot.svg' NOT NULL,
+	"user_image_src" text DEFAULT '/masguin.svg' NOT NULL,
 	"active_course_id" integer,
 	"hearts" integer DEFAULT 5 NOT NULL,
 	"points" integer DEFAULT 0 NOT NULL

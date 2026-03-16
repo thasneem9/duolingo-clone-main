@@ -332,7 +332,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'/mascot.svg'"
+          "default": "'/masguin.svg'"
         },
         "active_course_id": {
           "name": "active_course_id",
