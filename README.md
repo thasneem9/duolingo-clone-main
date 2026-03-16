@@ -217,6 +217,8 @@ Useful resources and dependencies that are used in Lingo.
 <!--- DEPENDENCIES_START --->
 - [@clerk/nextjs](https://www.npmjs.com/package/@clerk/nextjs): ^6.38.2
 - [@eslint/eslintrc](https://www.npmjs.com/package/@eslint/eslintrc): ^3
+- [@mediapipe/hands](https://www.npmjs.com/package/@mediapipe/hands): ^0.4.1675469240
+- [@mediapipe/tasks-vision](https://www.npmjs.com/package/@mediapipe/tasks-vision): ^0.10.32
 - [@neondatabase/serverless](https://www.npmjs.com/package/@neondatabase/serverless): ^1.0.2
 - [@radix-ui/react-avatar](https://www.npmjs.com/package/@radix-ui/react-avatar): ^1.1.11
 - [@radix-ui/react-dialog](https://www.npmjs.com/package/@radix-ui/react-dialog): ^1.1.15
@@ -236,6 +238,7 @@ Useful resources and dependencies that are used in Lingo.
 - [eslint](https://www.npmjs.com/package/eslint): ^10
 - [eslint-config-next](https://www.npmjs.com/package/eslint-config-next): 16.1.6
 - [eslint-config-prettier](https://www.npmjs.com/package/eslint-config-prettier): ^10.1.8
+- [fingerpose](https://www.npmjs.com/package/fingerpose): ^0.1.0
 - [lucide-react](https://www.npmjs.com/package/lucide-react): ^0.577.0
 - [next](https://www.npmjs.com/package/next): ^16.1.6
 - [pg](https://www.npmjs.com/package/pg): ^8.20.0
@@ -249,6 +252,7 @@ Useful resources and dependencies that are used in Lingo.
 - [react-confetti](https://www.npmjs.com/package/react-confetti): ^6.4.0
 - [react-dom](https://www.npmjs.com/package/react-dom): ^19.2.4
 - [react-use](https://www.npmjs.com/package/react-use): ^17.6.0
+- [react-webcam](https://www.npmjs.com/package/react-webcam): ^7.2.0
 - [sonner](https://www.npmjs.com/package/sonner): ^2.0.7
 - [stripe](https://www.npmjs.com/package/stripe): ^20.4.0
 - [tailwind-merge](https://www.npmjs.com/package/tailwind-merge): ^3.5.0
