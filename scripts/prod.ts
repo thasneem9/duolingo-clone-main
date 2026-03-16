@@ -65,6 +65,7 @@ const main = async () => {
 
         // For each lesson, insert challenges
         for (const lesson of lessons) {
+           if (lesson.order === 1) {
           const challenges = await db
             .insert(schema.challenges)
             .values([
@@ -203,8 +204,20 @@ const main = async () => {
 }
           }
         }
+        if (lesson.order === 2) {
+  await db.insert(schema.challenges).values([
+    {
+      lessonId: lesson.id,
+      type: "SELECT",
+      question: "Show the sign for number 1",
+      imageSrc: "/signs/one.gif",
+      order: 1,
+    }
+  ]);
+}
       }
     }
+  }
     console.log("Database seeded successfully");
   } catch (error) {
     console.error(error);
