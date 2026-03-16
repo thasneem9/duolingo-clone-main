@@ -82,6 +82,9 @@ duolingo-clone/
     |-- drizzle.ts
     |-- queries.ts
     |-- schema.ts
+  |- drizzle/
+    |-- meta/
+    |-- 0000_cynical_gwen_stacy.sql
   |- lib/
     |-- admin.ts
     |-- stripe.ts
@@ -93,8 +96,6 @@ duolingo-clone/
     |-- use-exit-modal.ts
     |-- use-hearts-modal.ts
     |-- use-practice-modal.ts
-  |- .env.example
-  |- .env/.env.local
   |- .gitignore
   |- .prettierrc.json
   |- bun.lock
@@ -105,6 +106,7 @@ duolingo-clone/
   |- eslint.config.mjs
   |- middleware.ts
   |- next.config.ts
+  |- package-lock.json
   |- package.json
   |- postcss.config.js
   |- tailwind.config.ts
