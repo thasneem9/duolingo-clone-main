@@ -1,6 +1,8 @@
 "use client";
+import { useRef } from "react";
 
-import { useState, useTransition } from "react";
+
+import { useState, useTransition, useEffect } from "react";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -46,6 +48,7 @@ export const Quiz = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [correctAudio, _c, correctControls] = useAudio({ src: "/correct.wav" });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [incorrectAudio, _i, incorrectControls] = useAudio({
     src: "/incorrect.wav",
   });
@@ -57,6 +60,7 @@ export const Quiz = ({
 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const gestureRef = useRef<any>(null);
   const { open: openHeartsModal } = useHeartsModal();
   const { open: openPracticeModal } = usePracticeModal();
 
@@ -81,6 +85,7 @@ export const Quiz = ({
   const [selectedOption, setSelectedOption] = useState<number>();
   const [status, setStatus] = useState<"none" | "wrong" | "correct">("none");
 
+
   const challenge = challenges[activeIndex];
   const options = challenge?.challengeOptions ?? [];
 
@@ -89,10 +94,9 @@ export const Quiz = ({
   };
 
   const onSelect = (id: number) => {
-    if (status !== "none") return;
-
-    setSelectedOption(id);
-  };
+  if (status !== "none" || selectedOption) return;
+  setSelectedOption(id);
+};
 
   const onContinue = () => {
     if (!selectedOption) return;
@@ -230,25 +234,27 @@ export const Quiz = ({
                 <QuestionBubble question={challenge.question} />
               )}
 
-              <Challenge
-                options={options}
-                onSelect={onSelect}
-                status={status}
-                selectedOption={selectedOption}
-                disabled={pending}
-                type={challenge.type}
-                imageSrc={challenge.imageSrc}
-              />
+           <Challenge
+  options={options}
+  onSelect={onSelect}
+  onContinue={onContinue}
+  status={status}
+  selectedOption={selectedOption}
+  disabled={pending}
+  type={challenge.type}
+  imageSrc={challenge.imageSrc}
+  gestureRef={gestureRef}
+/>
             </div>
           </div>
         </div>
       </div>
 
-      <Footer
-        disabled={pending || !selectedOption}
-        status={status}
-        onCheck={onContinue}
-      />
+<Footer
+  disabled={pending}
+  status={status}
+  onCheck={onContinue}
+/>
     </>
   );
 };

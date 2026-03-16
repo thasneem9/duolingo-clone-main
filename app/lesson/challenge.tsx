@@ -3,45 +3,61 @@ import { cn } from "@/lib/utils";
 
 import { Card } from "./card";
 import { GestureCamera } from "./gesture-camera";
+import { useRef } from "react";
+
 
 type ChallengeProps = {
   options: (typeof challengeOptions.$inferSelect)[];
   onSelect: (id: number) => void;
+  onContinue: () => void;
   status: "correct" | "wrong" | "none";
   selectedOption?: number;
   disabled?: boolean;
   type: (typeof challenges.$inferSelect)["type"];
-   imageSrc?: string;
+  imageSrc?: string;
+  gestureRef?: any;
 };
 
 export const Challenge = ({
   options,
   onSelect,
+  onContinue,
   status,
   selectedOption,
   disabled,
   type,
-    imageSrc,
+  imageSrc,
+  gestureRef,
 }: ChallengeProps) => {
-   if (type === "GESTURE") {
-    return (
-      <div className="flex flex-col items-center gap-6">
+  
+  if (type === "GESTURE") {
+  return (
+    <div className="flex flex-col items-center gap-6">
 
-        {imageSrc && (
-          <img src={imageSrc} className="h-40 rounded-xl" />
-        )}
+      {imageSrc && (
+        <img src={imageSrc} className="h-40 rounded-xl" />
+      )}
 
-    <GestureCamera
+<GestureCamera
   target="8"
-  onCorrect={() => {
-    const correct = options.find(o => o.correct);
-    if (correct) onSelect(correct.id);
+  onGesture={(correct) => {
+    const option = options.find((o) => o.correct === correct);
+    if (!option) return;
+
+    onSelect(option.id);
+
+    // evaluate answer immediately
+    setTimeout(() => {
+      onContinue();
+    }, 0);
   }}
 />
 
-      </div>
-    );
-  }
+    
+
+    </div>
+  );
+}
    return (
   <>
     {imageSrc && (

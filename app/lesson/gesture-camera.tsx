@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Webcam from "react-webcam";
 import {
   FilesetResolver,
@@ -10,13 +10,20 @@ import {
 
 type Props = {
   target: string;
-  onCorrect: () => void;
+  onGesture: (correct: boolean) => void;
 };
 
-export const GestureCamera = ({ target, onCorrect }: Props) => {
+export const GestureCamera = ({ target, onGesture }: Props) => {
   const webcamRef = useRef<Webcam>(null);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
+  const latestGesture = useRef<boolean | null>(null);
+const [clicked, setClicked] = useState(false);
 
+const handleCapture = () => {
+  if (clicked) return; // prevent multiple clicks
+  setClicked(true);
+  checkGesture();
+};
   useEffect(() => {
     const init = async () => {
       const vision = await FilesetResolver.forVisionTasks(
@@ -34,28 +41,38 @@ export const GestureCamera = ({ target, onCorrect }: Props) => {
 
       landmarkerRef.current = landmarker;
 
-    const detect = async () => {
-  const video = webcamRef.current?.video;
+      const detect = () => {
+        const video = webcamRef.current?.video;
 
-  if (
-    !video ||
-    !landmarkerRef.current ||
-    video.readyState < 2   // video not ready yet
-  ) {
-    requestAnimationFrame(detect);
-    return;
-  }
+        if (!video || !landmarkerRef.current || video.readyState < 2) {
+          requestAnimationFrame(detect);
+          return;
+        }
 
-  const results: HandLandmarkerResult =
-    landmarkerRef.current.detectForVideo(video, performance.now());
+        const results: HandLandmarkerResult =
+          landmarkerRef.current.detectForVideo(video, performance.now());
 
         if (results.landmarks.length > 0) {
-          console.log("hand detected", results.landmarks);
+          const landmarks = results.landmarks[0];
 
-          // For now just detect ANY hand to prove ML works
-          // Later we check finger positions for "8"
-          onCorrect();
-          return;
+          const indexUp = landmarks[8].y < landmarks[6].y;
+          const middleUp = landmarks[12].y < landmarks[10].y;
+          const ringUp = landmarks[16].y < landmarks[14].y;
+          const pinkyUp = landmarks[20].y < landmarks[18].y;
+          const thumbUp = landmarks[4].y < landmarks[3].y;
+
+          const palmFacing = Math.abs(landmarks[5].x - landmarks[17].x) > 0.04;
+
+          const correct =
+            target === "8" &&
+            palmFacing &&
+            thumbUp &&
+            indexUp &&
+            middleUp &&
+            !ringUp &&
+            !pinkyUp;
+
+          latestGesture.current = correct;
         }
 
         requestAnimationFrame(detect);
@@ -65,15 +82,30 @@ export const GestureCamera = ({ target, onCorrect }: Props) => {
     };
 
     init();
-  }, [onCorrect]);
+  }, [target]);
+
+  const checkGesture = () => {
+    if (latestGesture.current === null) {
+      onGesture(false);
+      return;
+    }
+
+    onGesture(latestGesture.current);
+  };
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-3">
       <Webcam ref={webcamRef} mirrored className="rounded-xl w-72" />
 
-      <p className="text-sm text-gray-500">
-        Show the sign for {target}
-      </p>
+     <button
+  onClick={handleCapture}
+  disabled={clicked}
+  className={`px-4 py-2 rounded-lg text-white transition
+    ${clicked ? "bg-green-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}
+  `}
+>
+  {clicked ? "Captured" : "Capture"}
+</button>
     </div>
   );
 };
