@@ -122,31 +122,7 @@ duolingo-clone/
 3. Create `.env` file in **root** directory.
 4. Contents of `.env`:
 
-```env
-# .env
 
-# disabled next.js telemetry
-NEXT_TELEMETRY_DISABLED=1
-
-# clerk auth keys
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-CLERK_SECRET_KEY=sk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-# neon db uri
-DATABASE_URL="postgresql://<user>:<password>@<host>:<post>/lingo?sslmode=require"
-
-# stripe api key and webhook
-STRIPE_API_SECRET_KEY=sk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-STRIPE_WEBHOOK_SECRET=whsec_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-# public app url
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# clerk admin user id(s) separated by comma and space (, )
-CLERK_ADMIN_IDS="user_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-# or CLERK_ADMIN_IDS="user_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx, user_xxxxxxxxxxxxxxxxxxxxxx" for multiple admins.
-
-```
 
 5. Obtain Clerk Authentication Keys
    1. **Source**: Clerk Dashboard or Settings Page
@@ -170,7 +146,7 @@ CLERK_ADMIN_IDS="user_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
       - Log in to your Stripe account.
       - Navigate to the dashboard or API settings.
       - Find the section related to API keys and webhook secrets.
-      - Copy the `STRIPE_API_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
+   
 
 8. Specify Public App URL
    1. **Procedure**:
