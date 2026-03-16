@@ -10,6 +10,7 @@ type ChallengeProps = {
   selectedOption?: number;
   disabled?: boolean;
   type: (typeof challenges.$inferSelect)["type"];
+   imageSrc?: string;
 };
 
 export const Challenge = ({
@@ -19,8 +20,16 @@ export const Challenge = ({
   selectedOption,
   disabled,
   type,
+    imageSrc,
 }: ChallengeProps) => {
-  return (
+   return (
+  <>
+    {imageSrc && (
+      <div className="flex justify-center mb-6">
+        <img src={imageSrc} className="h-40 rounded-xl" />
+      </div>
+    )}
+
     <div
       className={cn(
         "grid gap-2",
@@ -34,16 +43,15 @@ export const Challenge = ({
           key={option.id}
           id={option.id}
           text={option.text}
-          imageSrc={option.imageSrc}
           shortcut={`${i + 1}`}
           selected={selectedOption === option.id}
           onClick={() => onSelect(option.id)}
           status={status}
-          audioSrc={option.audioSrc}
           disabled={disabled}
           type={type}
         />
       ))}
     </div>
-  );
-};
+  </>
+);
+  };

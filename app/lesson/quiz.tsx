@@ -237,6 +237,7 @@ export const Quiz = ({
                 selectedOption={selectedOption}
                 disabled={pending}
                 type={challenge.type}
+                imageSrc={challenge.imageSrc}
               />
             </div>
           </div>

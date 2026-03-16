@@ -72,6 +72,7 @@ export const challenges = pgTable("challenges", {
     .notNull(),
   type: challengesEnum("type").notNull(),
   question: text("question").notNull(),
+  imageSrc: text("image_src"), // ⭐ add this
   order: integer("order").notNull(),
 });
 
@@ -93,10 +94,7 @@ export const challengeOptions = pgTable("challenge_options", {
     .notNull(),
   text: text("text").notNull(),
   correct: boolean("correct").notNull(),
-  imageSrc: text("image_src"),
-  audioSrc: text("audio_src"),
 });
-
 export const challengeOptionsRelations = relations(
   challengeOptions,
   ({ one }) => ({
