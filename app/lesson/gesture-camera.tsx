@@ -18,42 +18,96 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
   const landmarkerRef = useRef<HandLandmarker | null>(null);
   const latestGesture = useRef<boolean | null>(null);
 const [clicked, setClicked] = useState(false);
+const canvasRef = useRef<HTMLCanvasElement>(null);
 
 const handleCapture = () => {
   if (clicked) return; // prevent multiple clicks
   setClicked(true);
   checkGesture();
 };
-  useEffect(() => {
-    const init = async () => {
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+useEffect(() => {
+  let running = true;
+
+  const init = async () => {
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
+
+    const landmarker = await HandLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath:
+          "https://storage.googleapis.com/mediapipe-assets/hand_landmarker.task",
+      },
+      numHands: 1,
+      runningMode: "VIDEO",
+    });
+
+    landmarkerRef.current = landmarker;
+
+    const detect = () => {
+      if (!running) return;
+
+      const video = webcamRef.current?.video;
+
+      if (!video || !landmarkerRef.current || video.readyState < 2) {
+        requestAnimationFrame(detect);
+        return;
+      }
+
+      const results = landmarkerRef.current.detectForVideo(
+        video,
+        performance.now()
       );
 
-      const landmarker = await HandLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath:
-            "https://storage.googleapis.com/mediapipe-assets/hand_landmarker.task",
-        },
-        numHands: 1,
-        runningMode: "VIDEO",
-      });
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext("2d");
 
-      landmarkerRef.current = landmarker;
+      if (canvas && ctx) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-      const detect = () => {
-        const video = webcamRef.current?.video;
-
-        if (!video || !landmarkerRef.current || video.readyState < 2) {
-          requestAnimationFrame(detect);
-          return;
-        }
-
-        const results: HandLandmarkerResult =
-          landmarkerRef.current.detectForVideo(video, performance.now());
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (results.landmarks.length > 0) {
           const landmarks = results.landmarks[0];
+
+          ctx.strokeStyle = latestGesture.current ? "#00FF00" : "#FF4444";
+          ctx.lineWidth = 3;
+
+          const connections = [
+            [0,1],[1,2],[2,3],[3,4],
+            [0,5],[5,6],[6,7],[7,8],
+            [5,9],[9,10],[10,11],[11,12],
+            [9,13],[13,14],[14,15],[15,16],
+            [13,17],[17,18],[18,19],[19,20],
+            [0,17]
+          ];
+
+          connections.forEach(([a,b]) => {
+            ctx.beginPath();
+            ctx.moveTo(
+              landmarks[a].x * canvas.width,
+              landmarks[a].y * canvas.height
+            );
+            ctx.lineTo(
+              landmarks[b].x * canvas.width,
+              landmarks[b].y * canvas.height
+            );
+            ctx.stroke();
+          });
+
+          landmarks.forEach((p) => {
+            ctx.beginPath();
+            ctx.arc(
+              p.x * canvas.width,
+              p.y * canvas.height,
+              5,
+              0,
+              2 * Math.PI
+            );
+            ctx.fillStyle = "red";
+            ctx.fill();
+          });
 
           const indexUp = landmarks[8].y < landmarks[6].y;
           const middleUp = landmarks[12].y < landmarks[10].y;
@@ -61,41 +115,36 @@ const handleCapture = () => {
           const pinkyUp = landmarks[20].y < landmarks[18].y;
           const thumbUp = landmarks[4].y < landmarks[3].y;
 
-          const palmFacing = Math.abs(landmarks[5].x - landmarks[17].x) > 0.04;
+          const palmFacing =
+            Math.abs(landmarks[5].x - landmarks[17].x) > 0.04;
 
-         const correct =
-  expectedGesture === "8"&&
-  palmFacing &&
-  thumbUp &&
-  indexUp &&
-  middleUp &&
-  !ringUp &&
-  !pinkyUp;
+          const correct =
+            expectedGesture === "8" &&
+            palmFacing &&
+            thumbUp &&
+            indexUp &&
+            middleUp &&
+            !ringUp &&
+            !pinkyUp;
 
-// freeze detection after capture
-if (!clicked) {
-  latestGesture.current = correct;
-}
-
-console.log("---- Gesture Analysis ----");
-console.log("thumbUp:", thumbUp);
-console.log("indexUp:", indexUp);
-console.log("middleUp:", middleUp);
-console.log("ringUp:", ringUp);
-console.log("pinkyUp:", pinkyUp);
-console.log("palmFacing:", palmFacing);
-console.log("Detected correct:", correct);
-console.log("-------------------------");
+          if (!clicked) {
+            latestGesture.current = correct;
+          }
         }
+      }
 
-        requestAnimationFrame(detect);
-      };
-
-      detect();
+      requestAnimationFrame(detect);
     };
 
-    init();
-  }, [expectedGesture]);
+    detect();
+  };
+
+  init();
+
+  return () => {
+    running = false;
+  };
+}, [expectedGesture]);
   useEffect(() => {
   setClicked(false);
   latestGesture.current = null;
@@ -116,7 +165,13 @@ const checkGesture = () => {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <Webcam ref={webcamRef} mirrored className="rounded-xl w-72" />
+     <div className="relative">
+  <Webcam ref={webcamRef} mirrored className="rounded-xl w-72" />
+<canvas
+  ref={canvasRef}
+  className="absolute top-0 left-0 w-72 h-full scale-x-[-1]"
+/>
+</div>
 
      <button
   onClick={handleCapture}
