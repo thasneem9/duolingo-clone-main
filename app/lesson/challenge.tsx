@@ -2,6 +2,7 @@ import { challengeOptions, challenges } from "@/db/schema";
 import { cn } from "@/lib/utils";
 
 import { Card } from "./card";
+import { GestureCamera } from "./gesture-camera";
 
 type ChallengeProps = {
   options: (typeof challengeOptions.$inferSelect)[];
@@ -22,6 +23,25 @@ export const Challenge = ({
   type,
     imageSrc,
 }: ChallengeProps) => {
+   if (type === "GESTURE") {
+    return (
+      <div className="flex flex-col items-center gap-6">
+
+        {imageSrc && (
+          <img src={imageSrc} className="h-40 rounded-xl" />
+        )}
+
+    <GestureCamera
+  target="8"
+  onCorrect={() => {
+    const correct = options.find(o => o.correct);
+    if (correct) onSelect(correct.id);
+  }}
+/>
+
+      </div>
+    );
+  }
    return (
   <>
     {imageSrc && (
@@ -38,6 +58,7 @@ export const Challenge = ({
           "grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(0,1fr))]"
       )}
     >
+      
       {options.map((option, i) => (
       <Card
   key={option.id}

@@ -76,7 +76,7 @@ const main = async () => {
                  imageSrc: "/signs/hello.gif",
                 order: 1,
               },
-              {
+            /*   {
                 lessonId: lesson.id,
                 type: "SELECT",
                  question: "Try to guess what this sign means?",
@@ -95,7 +95,7 @@ const main = async () => {
                 type: "ASSIST",
                 question: "How should you get the attention of a deaf person from behind?",
                 order: 4,
-              },
+              }, */
            
              
             ])
@@ -204,16 +204,39 @@ const main = async () => {
 }
           }
         }
-        if (lesson.order === 2) {
-  await db.insert(schema.challenges).values([
-    {
-      lessonId: lesson.id,
-      type: "SELECT",
-      question: "Show the sign for number 1",
-      imageSrc: "/signs/one.gif",
-      order: 1,
-    }
-  ]);
+     if (lesson.order === 2) {
+
+const challenges = await db.insert(schema.challenges).values([
+{
+lessonId: lesson.id,
+type: "SELECT",
+question: "Which number matches this sign?",
+imageSrc: "/gestures/eight.png",
+order: 1,
+},
+{
+lessonId: lesson.id,
+type: "GESTURE",
+question: "Show the sign for number 8",
+imageSrc: "/gestures/eight.png",
+order: 2,
+}
+]).returning();
+
+await db.insert(schema.challengeOptions).values([
+{ challengeId: challenges[0].id, text: "6", correct: false },
+{ challengeId: challenges[0].id, text: "8", correct: true },
+{ challengeId: challenges[0].id, text: "10", correct: false },
+]);
+
+await db.insert(schema.challengeOptions).values([
+{
+challengeId: challenges[1].id,
+text: "Detected",
+correct: true
+}
+]);
+
 }
       }
     }
