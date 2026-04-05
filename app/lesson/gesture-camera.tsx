@@ -118,14 +118,30 @@ useEffect(() => {
           const palmFacing =
             Math.abs(landmarks[5].x - landmarks[17].x) > 0.04;
 
-          const correct =
-            expectedGesture === "8" &&
-            palmFacing &&
-            thumbUp &&
-            indexUp &&
-            middleUp &&
-            !ringUp &&
-            !pinkyUp;
+           let correct = false;
+
+// 👉 Gesture: 8 (unchanged)
+console.log("Expected gesture:", expectedGesture);
+const gesture = expectedGesture?.trim();
+
+if (gesture === "8") {
+  correct =
+    palmFacing &&
+    thumbUp &&
+    indexUp &&
+    middleUp &&
+    !ringUp &&
+    !pinkyUp;
+}
+
+if (gesture === "0") {
+  correct =
+    !thumbUp &&
+    !indexUp &&
+    !middleUp &&
+    !ringUp &&
+    !pinkyUp;
+}
 
           if (!clicked) {
             latestGesture.current = correct;

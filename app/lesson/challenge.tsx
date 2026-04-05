@@ -29,7 +29,7 @@ export const Challenge = ({
   imageSrc,
   gestureRef,
 }: ChallengeProps) => {
-  
+  const correctOption = options.find((o) => o.correct);
  if (type === "GESTURE") {
   return (
     <div className="flex flex-col items-center gap-6">
@@ -38,9 +38,11 @@ export const Challenge = ({
         <img src={imageSrc} className="h-40 rounded-xl" />
       )}
 
-    <GestureCamera
-  key={status}   // forces reset
-  expectedGesture="8"
+
+
+<GestureCamera
+  key={status}
+  expectedGesture={String(correctOption?.text).trim()}
   onResult={(correct) => {
     console.log("🎯 Gesture result:", correct);
     onContinue(correct);

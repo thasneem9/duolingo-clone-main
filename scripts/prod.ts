@@ -219,7 +219,13 @@ lessonId: lesson.id,
 type: "GESTURE",
 question: "Show the ISL gesture for the Number 8",
 order: 2,
-}
+},
+ {
+    lessonId: lesson.id,
+    type: "GESTURE",
+    question: "Show the ISL gesture for the Number 0",
+    order: 3, // 👈 IMPORTANT
+  }
 ]).returning();
 
 await db.insert(schema.challengeOptions).values([
@@ -231,9 +237,17 @@ await db.insert(schema.challengeOptions).values([
 await db.insert(schema.challengeOptions).values([
 {
 challengeId: challenges[1].id,
-text: "Detected",
+text: "8",
 correct: true
 }
+]);
+
+await db.insert(schema.challengeOptions).values([
+  {
+    challengeId: challenges[2].id, 
+    text: "0",
+    correct: true
+  }
 ]);
 
 }
