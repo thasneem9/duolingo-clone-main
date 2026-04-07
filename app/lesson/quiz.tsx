@@ -1,7 +1,6 @@
 "use client";
 import { useRef } from "react";
 
-
 import { useState, useTransition, useEffect } from "react";
 
 import Image from "next/image";
@@ -45,9 +44,7 @@ export const Quiz = ({
   initialLessonChallenges,
   userSubscription,
 }: QuizProps) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [correctAudio, _c, correctControls] = useAudio({ src: "/correct.wav" });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [checking, setChecking] = useState(false);
 
   const [incorrectAudio, _i, incorrectControls] = useAudio({
@@ -75,19 +72,19 @@ export const Quiz = ({
     return initialPercentage === 100 ? 0 : initialPercentage;
   });
   const [challenges] = useState(initialLessonChallenges);
+
   const [activeIndex, setActiveIndex] = useState(() => {
     const uncompletedIndex = challenges.findIndex(
       (challenge) => !challenge.completed
     );
-
     return uncompletedIndex === -1 ? 0 : uncompletedIndex;
   });
 
-  const [selectedOption, setSelectedOption] = useState<number>();
-  const selectedOptionRef = useRef<number | undefined>(undefined);
+  const [selectedOption, setSelectedOption] = useState<number | number[]>();
+  const selectedOptionRef = useRef<number | number[] | undefined>(undefined);
   const [status, setStatus] = useState<"none" | "wrong" | "correct">("none");
-  
 
+  const [matchedPairs, setMatchedPairs] = useState<number[]>([]);
 
   const challenge = challenges[activeIndex];
   const options = challenge?.challengeOptions ?? [];
@@ -96,120 +93,169 @@ export const Quiz = ({
     setActiveIndex((current) => current + 1);
   };
 
-const onSelect = (id: number) => {
-  if (status !== "none") return;
-  if (selectedOptionRef.current) return;
+  useEffect(() => {
+    setMatchedPairs([]);
+  }, [activeIndex]);
 
-  console.log("🧩 Option selected:", id);
+  const onSelect = (id: number) => {
+    if (status !== "none") return;
 
-  selectedOptionRef.current = id;   // store immediately
-  setSelectedOption(id);            // React state
-};
+    // ✅ MATCH LOGIC (FIXED)
+    if (challenge.type === "MATCH") {
+      const current = (selectedOptionRef.current as number[]) || [];
 
-const onContinue = (correct?: boolean) => {
-  console.log("🟦 CHECK button clicked");
+      if (current.length === 2) return;
 
-  console.log("status:", status);
+      const updated = [...current, id];
+      selectedOptionRef.current = updated;
+      setSelectedOption(updated);
 
-  if (checking) return;
- if (challenge.type === "GESTURE") {
-   if (status === "wrong") {
-    setStatus("none");
-    return;
-  }
-  console.log("Gesture result:", correct);
+      if (updated.length === 2) {
+        const selected = options.filter((o) => updated.includes(o.id));
 
-  if (correct) {
-    void correctControls.play();
-    setStatus("correct");
+        if (selected[0]?.pairId === selected[1]?.pairId) {
+          const pairId = selected[0].pairId!;
 
-    setTimeout(() => {
+          if (matchedPairs.includes(pairId)) return;
+
+          const newMatched = [...matchedPairs, pairId];
+          setMatchedPairs(newMatched);
+
+          setStatus("correct");
+
+          setTimeout(() => {
+            setStatus("none");
+            setSelectedOption(undefined);
+            selectedOptionRef.current = undefined;
+
+            const totalPairs = options.length / 2;
+
+            if (newMatched.length === totalPairs) {
+              startTransition(() => {
+                upsertChallengeProgress(challenge.id);
+              });
+
+              onNext();
+              setMatchedPairs([]);
+            }
+          }, 500);
+        } else {
+          setStatus("wrong");
+        }
+      }
+
+      return;
+    }
+
+    // ✅ NORMAL SELECT
+    if (selectedOptionRef.current) return;
+
+    selectedOptionRef.current = id;
+    setSelectedOption(id);
+  };
+
+  const onContinue = (correct?: boolean) => {
+    if (checking) return;
+
+    // ✅ MATCH RETRY FIX
+    if (challenge.type === "MATCH") {
+      if (status === "wrong") {
+        setStatus("none");
+        setSelectedOption(undefined);
+        selectedOptionRef.current = undefined;
+      }
+      return;
+    }
+
+    // ✅ GESTURE FIX
+    if (challenge.type === "GESTURE") {
+      if (status === "wrong") {
+        setStatus("none");
+        return;
+      }
+
+      if (correct) {
+        void correctControls.play();
+        setStatus("correct");
+
+        setTimeout(() => {
+          onNext();
+          setStatus("none");
+        }, 800);
+      } else {
+        void incorrectControls.play();
+        setStatus("wrong");
+      }
+
+      return;
+    }
+
+    const option = selectedOptionRef.current;
+    if (!option) return;
+
+    setChecking(true);
+
+    if (status === "wrong") {
+      setStatus("none");
+      setSelectedOption(undefined);
+      selectedOptionRef.current = undefined;
+      setChecking(false);
+      return;
+    }
+
+    if (status === "correct") {
       onNext();
       setStatus("none");
-    }, 800);
+      setSelectedOption(undefined);
+      selectedOptionRef.current = undefined;
+      setChecking(false);
+      return;
+    }
 
-  } else {
-    void incorrectControls.play();
-    setStatus("wrong");
-  }
+    const correctOption = options.find((option) => option.correct);
+    if (!correctOption) {
+      setChecking(false);
+      return;
+    }
 
-  return;
-}
- 
-const option = selectedOptionRef.current;
+    if (correctOption.id === option) {
+      startTransition(() => {
+        upsertChallengeProgress(challenge.id)
+          .then((response) => {
+            if (response?.error === "hearts") {
+              openHeartsModal();
+              return;
+            }
 
-console.log("selectedOption:", option);
+            void correctControls.play();
+            setStatus("correct");
+            setPercentage((prev) => prev + 100 / challenges.length);
 
-if (!option) return;
-  setChecking(true);
+            if (initialPercentage === 100) {
+              setHearts((prev) => Math.min(prev + 1, MAX_HEARTS));
+            }
+          })
+          .finally(() => setChecking(false));
+      });
+    } else {
+      startTransition(() => {
+        reduceHearts(challenge.id)
+          .then((response) => {
+            if (response?.error === "hearts") {
+              openHeartsModal();
+              return;
+            }
 
-  if (status === "wrong") {
-    setStatus("none");
-   setSelectedOption(undefined);
-selectedOptionRef.current = undefined;
-    setChecking(false);
-    return;
-  }
+            void incorrectControls.play();
+            setStatus("wrong");
 
-  if (status === "correct") {
-    onNext();
-    setStatus("none");
-    setSelectedOption(undefined);
-selectedOptionRef.current = undefined;
-    setChecking(false);
-    return;
-  }
-
-  const correctOption = options.find((option) => option.correct);
-
-  if (!correctOption) {
-    setChecking(false);
-    return;
-  }
-
-  if (correctOption.id === option) {
-    console.log("✅ Correct answer");
-
-    startTransition(() => {
-      upsertChallengeProgress(challenge.id)
-        .then((response) => {
-          if (response?.error === "hearts") {
-            openHeartsModal();
-            return;
-          }
-
-          void correctControls.play();
-          setStatus("correct");
-          setPercentage((prev) => prev + 100 / challenges.length);
-
-          if (initialPercentage === 100) {
-            setHearts((prev) => Math.min(prev + 1, MAX_HEARTS));
-          }
-        })
-        .finally(() => setChecking(false));
-    });
-
-  } else {
-    console.log("❌ Wrong answer");
-
-    startTransition(() => {
-      reduceHearts(challenge.id)
-        .then((response) => {
-          if (response?.error === "hearts") {
-            openHeartsModal();
-            return;
-          }
-
-          void incorrectControls.play();
-          setStatus("wrong");
-
-          if (!response?.error)
-            setHearts((prev) => Math.max(prev - 1, 0));
-        })
-        .finally(() => setChecking(false));
-    });
-  }
-};
+            if (!response?.error)
+              setHearts((prev) => Math.max(prev - 1, 0));
+          })
+          .finally(() => setChecking(false));
+      });
+    }
+  };
 
   if (!challenge) {
     return (
@@ -223,22 +269,6 @@ selectedOptionRef.current = undefined;
           height={height}
         />
         <div className="mx-auto flex h-full max-w-lg flex-col items-center justify-center gap-y-4 text-center lg:gap-y-8">
-          <Image
-            src="/finish.svg"
-            alt="Finish"
-            className="hidden lg:block"
-            height={100}
-            width={100}
-          />
-
-          <Image
-            src="/finish.svg"
-            alt="Finish"
-            className="block lg:hidden"
-            height={100}
-            width={100}
-          />
-
           <h1 className="text-lg font-bold text-neutral-700 lg:text-3xl">
             Great job! <br /> You&apos;ve completed the lesson.
           </h1>
@@ -276,39 +306,28 @@ selectedOptionRef.current = undefined;
         hasActiveSubscription={!!userSubscription?.isActive}
       />
 
-      <div className="flex-1">
-        <div className="flex h-full items-center justify-center">
-          <div className="flex w-full flex-col gap-y-12 px-6 lg:min-h-[350px] lg:w-[600px] lg:px-0">
-            <h1 className="text-center text-lg font-bold text-neutral-700 lg:text-start lg:text-3xl">
-              {title}
-            </h1>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex w-full flex-col gap-y-12 px-6 lg:w-[600px]">
+          <h1 className="text-center text-lg font-bold text-neutral-700 lg:text-3xl">
+            {title}
+          </h1>
 
-            <div>
-              {challenge.type === "ASSIST" && (
-                <QuestionBubble question={challenge.question} />
-              )}
-
-           <Challenge
-  options={options}
-  onSelect={onSelect}
-  onContinue={onContinue}
-  status={status}
-  selectedOption={selectedOption}
-  disabled={pending}
-  type={challenge.type}
-  imageSrc={challenge.imageSrc}
-  gestureRef={gestureRef}
-/>
-            </div>
-          </div>
+          <Challenge
+            options={options}
+            onSelect={onSelect}
+            onContinue={onContinue}
+            status={status}
+            selectedOption={selectedOption}
+            disabled={pending}
+            type={challenge.type}
+            imageSrc={challenge.imageSrc}
+            gestureRef={gestureRef}
+             matchedPairs={matchedPairs}
+          />
         </div>
       </div>
 
-<Footer
-  disabled={pending}
-  status={status}
-  onCheck={onContinue}
-/>
+      <Footer disabled={pending} status={status} onCheck={onContinue} />
     </>
   );
 };

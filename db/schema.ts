@@ -64,7 +64,8 @@ export const lessonsRelations = relations(lessons, ({ one, many }) => ({
 export const challengesEnum = pgEnum("type", [
   "SELECT",
   "ASSIST",
-  "GESTURE"
+  "GESTURE",
+  "MATCH"
 ]);
 
 export const challenges = pgTable("challenges", {
@@ -77,6 +78,7 @@ export const challenges = pgTable("challenges", {
 
   question: text("question").notNull(),
   imageSrc: text("image_src"),
+ 
 
   expectedGesture: text("expected_gesture"), // NEW
 
@@ -99,9 +101,10 @@ export const challengeOptions = pgTable("challenge_options", {
       onDelete: "cascade",
     })
     .notNull(),
-  text: text("text").notNull(),
+  text: text("text"),
   correct: boolean("correct").notNull(),
-  imageSrc: text("image_src"), // ← ADD THIS
+  imageSrc: text("image_src"), 
+  pairId: integer("pair_id"),
 });
 export const challengeOptionsRelations = relations(
   challengeOptions,

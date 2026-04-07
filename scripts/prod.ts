@@ -76,7 +76,7 @@ const main = async () => {
                  imageSrc: "/signs/hello.gif",
                 order: 1,
               },
-            /*   {
+              {
                 lessonId: lesson.id,
                 type: "SELECT",
                  question: "Try to guess what this sign means?",
@@ -92,10 +92,10 @@ const main = async () => {
               },
               {
                 lessonId: lesson.id,
-                type: "ASSIST",
-                question: "How should you get the attention of a deaf person from behind?",
+                type: "MATCH",
+                question: "Match the signs to their meaning",
                 order: 4,
-              }, */
+              }
            
              
             ])
@@ -179,29 +179,55 @@ const main = async () => {
                 },
               ]);
             }
+            if (challenge.type === "MATCH") {
+              await db.insert(schema.challengeOptions).values([
+                {
+      challengeId: challenge.id,
+      text: "Hello",
+      correct: false,
+      pairId: 1,
+    },
+    {
+      challengeId: challenge.id,
+      imageSrc: "/signs/hello.gif",
+      text: null,
+      correct: false,
+      pairId: 1,
+    },
 
-            if (challenge.order === 4) {
-  await db.insert(schema.challengeOptions).values([
+    // Pair 2
     {
       challengeId: challenge.id,
+      text: "Goodbye",
       correct: false,
-      text: "Throw something at them",
-      imageSrc: "/signs/throw.gif",
+      pairId: 2,
     },
     {
       challengeId: challenge.id,
-      correct: true,
-      text: "Tap their shoulder gently",
-      imageSrc: "/signs/tap.gif",
+      imageSrc: "/signs/bye.gif",
+      text: null,
+      correct: false,
+      pairId: 2,
+    },
+
+    // Pair 3
+    {
+      challengeId: challenge.id,
+      text: "India",
+      correct: false,
+      pairId: 3,
     },
     {
       challengeId: challenge.id,
+      imageSrc: "/signs/indian.gif",
+      text: null,
       correct: false,
-      text: "Make Loud noise",
-      imageSrc: "/signs/loud-clap.gif",
+      pairId: 3,
     },
   ]);
 }
+
+           
           }
         }
      if (lesson.order === 2) {

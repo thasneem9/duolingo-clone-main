@@ -88,18 +88,20 @@ export const Card = ({
           {text}
         </p>
 
-        <div
-          className={cn(
-            "flex h-[20px] w-[20px] items-center justify-center rounded-lg border-2 text-xs font-semibold text-neutral-400 lg:h-[30px] lg:w-[30px] lg:text-[15px]",
-            selected && "border-sky-300 text-sky-500",
-            selected &&
-              status === "correct" &&
-              "border-indigo-500 text-indigo-500",
-            selected && status === "wrong" && "border-rose-500 text-rose-500"
-          )}
-        >
-          {shortcut}
-        </div>
+       {type !== "MATCH" && (
+  <div
+    className={cn(
+      "flex h-[20px] w-[20px] items-center justify-center rounded-lg border-2 text-xs font-semibold text-neutral-400 lg:h-[30px] lg:w-[30px] lg:text-[15px]",
+      selected && "border-sky-300 text-sky-500",
+      selected &&
+        status === "correct" &&
+        "border-indigo-500 text-indigo-500",
+      selected && status === "wrong" && "border-rose-500 text-rose-500"
+    )}
+  >
+    {shortcut}
+  </div>
+)}
       </div>
     </div>
   );
