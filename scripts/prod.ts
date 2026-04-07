@@ -230,7 +230,7 @@ const main = async () => {
            
           }
         }
-     if (lesson.order === 2) {
+           if (lesson.order === 2) {
 
 const challenges = await db.insert(schema.challenges).values([
 {
@@ -276,7 +276,26 @@ await db.insert(schema.challengeOptions).values([
   }
 ]);
 
-}
+        }
+           if (lesson.order === 3) {
+  const challenges = await db.insert(schema.challenges).values([
+    {
+      lessonId: lesson.id,
+      type: "GESTURE",
+      question: "Show the sentence: WHAT IS YOUR NAME",
+      expectedGesture: "SENTENCE", // 🔥 IMPORTANT
+      order: 1,
+    }
+  ]).returning();
+
+  await db.insert(schema.challengeOptions).values([
+    {
+      challengeId: challenges[0].id,
+      text: "SENTENCE",
+      correct: true,
+    }
+  ]);
+        }
       }
     }
   }

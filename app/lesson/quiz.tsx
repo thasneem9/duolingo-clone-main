@@ -168,27 +168,32 @@ export const Quiz = ({
     }
 
     // ✅ GESTURE FIX
-    if (challenge.type === "GESTURE") {
-      if (status === "wrong") {
-        setStatus("none");
-        return;
-      }
+   if (challenge.type === "GESTURE") {
+  if (status === "wrong") {
+    setStatus("none");
+    return;
+  }
 
-      if (correct) {
-        void correctControls.play();
-        setStatus("correct");
+  if (correct) {
+    void correctControls.play();
+    setStatus("correct");
 
-        setTimeout(() => {
-          onNext();
-          setStatus("none");
-        }, 800);
-      } else {
-        void incorrectControls.play();
-        setStatus("wrong");
-      }
+    // 🔥 ADD THIS
+    startTransition(() => {
+      upsertChallengeProgress(challenge.id);
+    });
 
-      return;
-    }
+    setTimeout(() => {
+      onNext();
+      setStatus("none");
+    }, 800);
+  } else {
+    void incorrectControls.play();
+    setStatus("wrong");
+  }
+
+  return;
+}
 
     const option = selectedOptionRef.current;
     if (!option) return;
