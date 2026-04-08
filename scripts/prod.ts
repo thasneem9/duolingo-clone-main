@@ -278,14 +278,21 @@ await db.insert(schema.challengeOptions).values([
 
         }
            if (lesson.order === 3) {
-  const challenges = await db.insert(schema.challenges).values([
-    {
-      lessonId: lesson.id,
-      type: "GESTURE",
-      question: "Show the sentence: WHAT IS YOUR NAME",
-      expectedGesture: "SENTENCE", // 🔥 IMPORTANT
-      order: 1,
-    }
+ const challenges = await db.insert(schema.challenges).values([
+  {
+    lessonId: lesson.id,
+    type: "GESTURE",
+    question: "Show the sentence: WHAT IS YOUR NAME",
+    expectedGesture: "SENTENCE",
+    order: 1,
+  },
+  {
+    lessonId: lesson.id,
+    type: "SELECT",
+    question: "What does this sign mean?",
+    imageSrc: "/signs/iknow.gif",
+    order: 2,
+  }
   ]).returning();
 
   await db.insert(schema.challengeOptions).values([
@@ -295,6 +302,23 @@ await db.insert(schema.challengeOptions).values([
       correct: true,
     }
   ]);
+  await db.insert(schema.challengeOptions).values([
+  {
+    challengeId: challenges[1].id,
+    text: "I know",
+    correct: true,
+  },
+  {
+    challengeId: challenges[1].id,
+    text: " I am Thinking",
+    correct: false,
+  },
+  {
+    challengeId: challenges[1].id,
+    text: " I Remember",
+    correct: false,
+  }
+]);
         }
       }
     }
