@@ -85,7 +85,10 @@ duolingo-clone/
   |- drizzle/
     |-- meta/
     |-- 0000_cynical_gwen_stacy.sql
+  |- hooks/
+    |-- useGestureSentence.ts
   |- lib/
+    |-- gestures/
     |-- admin.ts
     |-- stripe.ts
     |-- utils.ts
