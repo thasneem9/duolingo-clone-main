@@ -9,12 +9,18 @@
   } from "@mediapipe/tasks-vision";
   import { useGestureSentence } from "@/hooks/useGestureSentence";
 
+
+import * as tf from "@tensorflow/tfjs";
+import { trainModel } from "@/lib/gestures/ml/train";
+import data from "@/lib/gestures/ml/dataset.json";
+
   type Props = {
     expectedGesture: string;
     onResult: (correct: boolean) => void;
   };
 
   export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
+
     const webcamRef = useRef<Webcam>(null);
     const landmarkerRef = useRef<HandLandmarker | null>(null);
     const latestGesture = useRef<boolean | null>(null);
@@ -22,12 +28,38 @@
   const [clicked, setClicked] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const modelLoadedRef = useRef(false);
   const handleCapture = () => {
     if (expectedGesture === "SENTENCE") return; 
     if (clicked) return; // prevent multiple clicks
     setClicked(true);
     checkGesture();
   };
+useEffect(() => {
+  if (modelLoadedRef.current) return;
+
+  const initModel = async () => {
+    try {
+      console.log("🧠 Training ML model...");
+      console.log("DATA SIZE:", data.length); // 👈 ADD THIS
+
+      const model = await trainModel(data);
+
+      console.log("MODEL CREATED:", model); // 👈 ADD THIS
+
+      (window as any).model = model;
+      (window as any).tf = tf;
+
+      modelLoadedRef.current = true;
+
+      console.log("✅ ML model ready");
+    } catch (err) {
+      console.error("❌ MODEL ERROR:", err);
+    }
+  };
+
+  initModel();
+}, []);
   useEffect(() => {
     let running = true;
 

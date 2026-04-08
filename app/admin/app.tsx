@@ -1,4 +1,4 @@
-"use client";
+a"use client";
 
 import dynamic from "next/dynamic";
 

@@ -25,7 +25,7 @@ export class GestureSequence {
 }
 
 export const validateSentence = (seq: string[]) => {
-  const expected = ["WHAT", "YOUR", "NAME"];
+  const expected = ["YOUR", "NAME","WHAT"];
 
   if (seq.length !== expected.length) return "incorrect";
 
