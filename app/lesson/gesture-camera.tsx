@@ -24,7 +24,7 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
 
   const webcamRef = useRef<Webcam>(null);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
-  const { process, result, sequence } = useGestureSentence();
+  const { process, result, sequence, finalSentence } = useGestureSentence();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const modelLoadedRef = useRef(false);
@@ -293,9 +293,11 @@ const [clicked, setClicked] = useState(false);
           <img src="/chatbubble.png" className="w-full" />
 
           <div className="absolute inset-0 flex items-center justify-center px-4 text-center font-bold text-black">
-            {sequence.length === 0
-              ? "Try signing..."
-              : sequence.join(", ")}
+          {finalSentence
+  ? finalSentence
+  : sequence.length === 0
+  ? "Try signing..."
+  : sequence.join(", ")}
           </div>
         </div>
 

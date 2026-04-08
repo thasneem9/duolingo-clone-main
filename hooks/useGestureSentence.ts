@@ -8,6 +8,7 @@ export const useGestureSentence = () => {
 
   const [currentGesture, setCurrentGesture] = useState<string | null>(null);
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
+  const [finalSentence, setFinalSentence] = useState<string | null>(null);
 
   // 🧠 stability system
   const stableGestureRef = useRef<string | null>(null);
@@ -96,23 +97,29 @@ export const useGestureSentence = () => {
     }
 
     // ✅ FULL CORRECT
-    if (seq.length === TARGET.length) {
-      console.log("🎉 CORRECT:", seq);
+  if (seq.length === TARGET.length) {
+  console.log("🎉 Sequence complete");
 
-      setResult("correct");
+  // 🧠 show final sentence first
+  setFinalSentence("What is your name?");
 
-      setTimeout(() => {
-        sequence.current.reset();
-        stableGestureRef.current = null;
-        stableCountRef.current = 0;
-      }, 500);
-    }
+  // delay success trigger
+  setTimeout(() => {
+    setResult("correct");
+
+    // reset everything
+    sequence.current.reset();
+    stableGestureRef.current = null;
+    stableCountRef.current = 0;
+  }, 1800);
+}
   };
 
-  return {
-    process,
-    currentGesture,
-    sequence: sequence.current.get(),
-    result,
-  };
+return {
+  process,
+  currentGesture,
+  sequence: sequence.current.get(),
+  result,
+  finalSentence,
+};
 };
