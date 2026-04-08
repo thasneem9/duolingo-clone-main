@@ -29,18 +29,38 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const modelLoadedRef = useRef(false);
 
+
+
+const checkGesture = () => {
+  console.log("📸 CHECK pressed");
+
+  if (latestGesture.current === null) {
+    onResult(false);
+    return;
+  }
+
+  onResult(latestGesture.current);
+};
+const latestGesture = useRef<boolean | null>(null);
+const [clicked, setClicked] = useState(false);
   // ✅ RANDOM FACT
   useEffect(() => {
     const randomFact = facts[Math.floor(Math.random() * facts.length)];
     setFact(randomFact);
   }, []);
 
-  // ✅ MODEL INIT
+  // ✅ LOAD MODEL ONLY FOR SENTENCE
   useEffect(() => {
+    if (expectedGesture !== "SENTENCE") {
+      setModelReady(true); // 🔥 skip ML
+      return;
+    }
+
     if (modelLoadedRef.current) return;
 
     const initModel = async () => {
       try {
+        console.log("🧠 Training ML model...");
         const model = await trainModel(data);
 
         (window as any).model = model;
@@ -48,15 +68,17 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
 
         modelLoadedRef.current = true;
         setModelReady(true);
+
+        console.log("✅ ML ready");
       } catch (err) {
         console.error("❌ MODEL ERROR:", err);
       }
     };
 
     initModel();
-  }, []);
+  }, [expectedGesture]);
 
-  // ✅ DETECTION
+  // ✅ DETECTION LOOP
   useEffect(() => {
     let running = true;
 
@@ -102,12 +124,57 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
           if (results.landmarks.length > 0) {
             const landmarks = results.landmarks[0];
 
+            // ================= SENTENCE (ML) =================
             if (expectedGesture === "SENTENCE") {
               process(landmarks);
             }
 
-            // ✅ DRAW FULL SKELETON
-            ctx.strokeStyle = "#8B5CF6"; // purple
+            // ================= SIMPLE GESTURES =================
+            else {
+              const indexUp = landmarks[8].y < landmarks[6].y;
+              const middleUp = landmarks[12].y < landmarks[10].y;
+              const ringUp = landmarks[16].y < landmarks[14].y;
+              const pinkyUp = landmarks[20].y < landmarks[18].y;
+              const thumbUp = landmarks[4].y < landmarks[3].y;
+
+              const palmFacing =
+                Math.abs(landmarks[5].x - landmarks[17].x) > 0.04;
+
+              let correct = false;
+
+              if (expectedGesture === "8") {
+                correct =
+                  palmFacing &&
+                  thumbUp &&
+                  indexUp &&
+                  middleUp &&
+                  !ringUp &&
+                  !pinkyUp;
+              }
+
+              if (expectedGesture === "0") {
+                correct =
+                  !thumbUp &&
+                  !indexUp &&
+                  !middleUp &&
+                  !ringUp &&
+                  !pinkyUp;
+              }
+
+              if (!clicked) {
+  latestGesture.current = correct;
+}
+            }
+
+            // ================= DRAW SKELETON =================
+         ctx.strokeStyle =
+  expectedGesture === "SENTENCE"
+    ? "#8B5CF6"
+    : latestGesture.current === null
+    ? "#8B5CF6"
+    : latestGesture.current
+    ? "#22C55E" // green
+    : "#EF4444"; // red
             ctx.lineWidth = 3;
 
             const connections = [
@@ -132,7 +199,6 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
               ctx.stroke();
             });
 
-            // points
             landmarks.forEach((p) => {
               ctx.beginPath();
               ctx.arc(
@@ -161,9 +227,32 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
     };
   }, [expectedGesture]);
 
-  // ================= UI =================
+  // ✅ HANDLE RESULT (SENTENCE ONLY)
+  const triggeredRef = useRef(false);
 
-  if (!modelReady) {
+  useEffect(() => {
+    if (expectedGesture !== "SENTENCE") return;
+    if (triggeredRef.current) return;
+
+    if (result === "correct") {
+      triggeredRef.current = true;
+      onResult(true);
+    } else if (result === "incorrect") {
+      triggeredRef.current = true;
+      onResult(false);
+    }
+  }, [result]);
+
+  useEffect(() => {
+    triggeredRef.current = false;
+  }, [expectedGesture]);
+  useEffect(() => {
+  setClicked(false);
+  latestGesture.current = null;
+}, [expectedGesture]);
+
+  // ================= LOADING UI =================
+  if (expectedGesture === "SENTENCE" && !modelReady) {
     return (
       <div className="flex flex-col items-center justify-center h-[400px] text-center px-6">
         <div className="text-3xl font-extrabold text-purple-600 animate-pulse">
@@ -181,10 +270,11 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
     );
   }
 
+  // ================= MAIN UI =================
   return (
     <div className="grid grid-cols-2 gap-6 items-center">
 
-      {/* LEFT: CAMERA */}
+      {/* LEFT CAMERA */}
       <div className="flex justify-center">
         <div className="relative">
           <Webcam ref={webcamRef} mirrored className="rounded-xl w-80" />
@@ -195,7 +285,7 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
         </div>
       </div>
 
-      {/* RIGHT: CHARACTER */}
+      {/* RIGHT CHARACTER */}
       <div className="relative flex flex-col items-center">
 
         {/* CHAT BUBBLE */}
@@ -209,8 +299,26 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
           </div>
         </div>
 
-       <img src="/boy.png" className="w-64 h-[420px] object-contain mt-20" />
+        {/* BOY */}
+        <img
+          src="/boy.png"
+          className="w-64 h-[420px] object-contain mt-20"
+        />
       </div>
+      {expectedGesture !== "SENTENCE" && (
+  <button
+    onClick={() => {
+      setClicked(true);
+      checkGesture();
+    }}
+    disabled={clicked}
+    className={`mt-4 px-4 py-2 rounded-lg text-white transition
+      ${clicked ? "bg-gray-400" : "bg-purple-600 hover:bg-purple-700"}
+    `}
+  >
+    {clicked ? "Captured" : "Capture"}
+  </button>
+)}
     </div>
   );
 };

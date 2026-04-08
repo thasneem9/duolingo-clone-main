@@ -36,7 +36,7 @@ export async function trainModel(data: any[]) {
 
  try {
   await model.fit(xs, ys, {
-    epochs: 3,
+    epochs: 5,
     batchSize: 4,
     callbacks: {
       onEpochEnd: (epoch, logs) => {
