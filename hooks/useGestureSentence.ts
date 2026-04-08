@@ -1,135 +1,111 @@
 import { useRef, useState } from "react";
 import { HistoryBuffer } from "@/lib/gestures/history";
-import { detectWhatGesture } from "@/lib/gestures/detectWhat.rule";
-import { detectYourGesture } from "@/lib/gestures/detectYour.rule";
-import { detectNameGesture } from "@/lib/gestures/detectName.rule";
-import { GestureSequence, validateSentence } from "@/lib/gestures/sequence";
-
+import { GestureSequence } from "@/lib/gestures/sequence";
 
 export const useGestureSentence = () => {
-  const MODE: "RULES" | "ML" = "ML"; // 🔁 switch anytime
-
-const RECORDING = false;
-const RECORD_LABEL = "NAME"; // only YOUR for now
-const datasetRef = useRef<any[]>([]);
-
   const history = useRef(new HistoryBuffer(25));
   const sequence = useRef(new GestureSequence());
 
   const [currentGesture, setCurrentGesture] = useState<string | null>(null);
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
 
-  const downloadDataset = () => {
-  const blob = new Blob(
-    [JSON.stringify(datasetRef.current)],
-    { type: "application/json" }
-  );
+  // 🧠 stability system
+  const stableGestureRef = useRef<string | null>(null);
+  const stableCountRef = useRef(0);
 
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "gesture-data.json";
-  a.click();
-};
-(window as any).downloadData = downloadDataset;
+  const REQUIRED_STABLE_FRAMES = 5; // 🔥 tune this (4–7 ideal)
+
   const process = (landmarks: any[]) => {
+    if (result !== null) return; // stop after result
+
     history.current.add(landmarks);
     const hist = history.current.get();
-    if (RECORDING && hist.length >= 20) {
-  const sample = hist
-    .slice(-20)
-    .map(frame => frame.flatMap(p => [p.x, p.y, p.z]));
 
-  datasetRef.current.push({
-    input: sample,
-    label: RECORD_LABEL,
-  });
+    const input = hist
+      .slice(-20)
+      .map(frame => frame.flatMap(p => [p.x, p.y, p.z]))
+      .flat();
 
-  console.log("📦 Recorded:", datasetRef.current.length);
-}
+    if (
+      input.length !== 20 * 63 ||
+      !(window as any).model ||
+      !(window as any).tf
+    ) return;
 
+    const prediction = (window as any).model.predict(
+      (window as any).tf.tensor([input])
+    );
 
-    let best: { label: string; confidence: number } | null = null;
+    const probs = prediction.dataSync();
+    const labels = ["WHAT", "YOUR", "NAME"];
+    const index = probs.indexOf(Math.max(...probs));
 
-    // ================= RULES MODE =================
-    if (MODE === "RULES") {
-      const what = detectWhatGesture(landmarks, hist);
-      const your = detectYourGesture(landmarks, hist);
-      const name = detectNameGesture(landmarks, hist);
+    const detectedLabel = labels[index];
+    const confidence = probs[index];
 
-      const candidates = [
-        { label: "WHAT", ...what },
-        { label: "YOUR", ...your },
-        { label: "NAME", ...name },
-      ];
+    // 🔥 ignore weak predictions
+    if (confidence < 0.7) return;
 
-      console.log("---- FRAME (RULES) ----");
-      console.log("WHAT:", what);
-      console.log("YOUR:", your);
-      console.log("NAME:", name);
-
-      best = candidates
-        .filter((c) => c.detected)
-        .sort((a, b) => b.confidence - a.confidence)[0] || null;
+    // ================= STABILITY LOGIC =================
+    if (stableGestureRef.current === detectedLabel) {
+      stableCountRef.current++;
+    } else {
+      stableGestureRef.current = detectedLabel;
+      stableCountRef.current = 1;
     }
 
-    // ================= ML MODE =================
-  if (MODE === "ML") {
-  const input = hist
-    .slice(-20)
-    .map(frame => frame.flatMap(p => [p.x, p.y, p.z]))
-    .flat();
+    // wait until stable
+    if (stableCountRef.current < REQUIRED_STABLE_FRAMES) return;
 
-  console.log("ML input length:", input.length);
-  console.log("MODEL:", (window as any).model);
+    // ================= ACCEPT GESTURE =================
+    const last = sequence.current.get().slice(-1)[0];
 
-  if (!(window as any).model) {
-  console.log("⏳ Waiting for model...");
-  return;
-}
+    if (last === detectedLabel) return; // avoid duplicates
 
-if (
-  input.length === 20 * 63 &&
-  (window as any).tf
-) {
-        const prediction = (window as any).model.predict(
-          (window as any).tf.tensor([input])
-        );
-
-        const probs = prediction.dataSync();
-
-        const labels = ["WHAT", "YOUR", "NAME"];
-        const index = probs.indexOf(Math.max(...probs));
-
-        best = {
-          label: labels[index],
-          confidence: probs[index],
-        };
-
-        console.log("---- FRAME (ML) ----");
-        console.log("Prediction:", labels[index], probs);
-      }
+    // 🔥 START ONLY WITH "YOUR"
+    if (sequence.current.get().length === 0 && detectedLabel !== "YOUR") {
+      return; // ignore random start
     }
 
-    // ================= APPLY RESULT =================
-    if (best && best.confidence > 0.6) {
-      setCurrentGesture(best.label);
+    // 🔥 LIMIT TO 3
+    if (sequence.current.get().length >= 3) return;
 
-      const last = sequence.current.get().slice(-1)[0];
+    sequence.current.add(detectedLabel);
+    setCurrentGesture(detectedLabel);
 
-      if (last !== best.label) {
-        sequence.current.add(best.label);
-      }
+    console.log("✅ Stable Gesture:", detectedLabel);
+    console.log("Sequence:", sequence.current.get());
 
-      console.log("Sequence:", sequence.current.get());
-    }
-
-    // ================= VALIDATE SENTENCE =================
+    // ================= VALIDATION =================
     const seq = sequence.current.get();
+    const TARGET = ["YOUR", "NAME", "WHAT"];
 
-    if (seq.length === 3) {
-      const res = validateSentence(seq);
-      setResult(res);
+    for (let i = 0; i < seq.length; i++) {
+      if (seq[i] !== TARGET[i]) {
+        console.log("❌ Wrong order:", seq);
+
+        setResult("incorrect");
+
+        // reset everything
+        sequence.current.reset();
+        stableGestureRef.current = null;
+        stableCountRef.current = 0;
+
+        return;
+      }
+    }
+
+    // ✅ FULL CORRECT
+    if (seq.length === TARGET.length) {
+      console.log("🎉 CORRECT:", seq);
+
+      setResult("correct");
+
+      setTimeout(() => {
+        sequence.current.reset();
+        stableGestureRef.current = null;
+        stableCountRef.current = 0;
+      }, 500);
     }
   };
 
