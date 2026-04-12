@@ -24,8 +24,14 @@ export const GestureCamera = ({ expectedGesture, onResult }: Props) => {
 
   const webcamRef = useRef<Webcam>(null);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
-  const { process, result, sequence, finalSentence } = useGestureSentence();
+ const {
+  process,
+  result,
+  sequence,
+  finalSentence
+} = useGestureSentence();
 
+(window as any).expectedGesture = expectedGesture;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const modelLoadedRef = useRef(false);
 
@@ -50,33 +56,37 @@ const [clicked, setClicked] = useState(false);
   }, []);
 
   // ✅ LOAD MODEL ONLY FOR SENTENCE
-  useEffect(() => {
-    if (expectedGesture !== "SENTENCE") {
-      setModelReady(true); // 🔥 skip ML
-      return;
+useEffect(() => {
+  const isMLMode =
+    expectedGesture === "SENTENCE" ||
+    expectedGesture === "I_KNOW";
+
+  if (!isMLMode) {
+    setModelReady(true);
+    return;
+  }
+
+  if (modelLoadedRef.current) return;
+
+  const initModel = async () => {
+    try {
+      console.log("🧠 Training ML model...");
+      const model = await trainModel(data);
+
+      (window as any).model = model;
+      (window as any).tf = tf;
+
+      modelLoadedRef.current = true;
+      setModelReady(true);
+
+      console.log("✅ ML ready");
+    } catch (err) {
+      console.error("❌ MODEL ERROR:", err);
     }
+  };
 
-    if (modelLoadedRef.current) return;
-
-    const initModel = async () => {
-      try {
-        console.log("🧠 Training ML model...");
-        const model = await trainModel(data);
-
-        (window as any).model = model;
-        (window as any).tf = tf;
-
-        modelLoadedRef.current = true;
-        setModelReady(true);
-
-        console.log("✅ ML ready");
-      } catch (err) {
-        console.error("❌ MODEL ERROR:", err);
-      }
-    };
-
-    initModel();
-  }, [expectedGesture]);
+  initModel();
+}, [expectedGesture]);
 
   // ✅ DETECTION LOOP
   useEffect(() => {
@@ -125,9 +135,13 @@ const [clicked, setClicked] = useState(false);
             const landmarks = results.landmarks[0];
 
             // ================= SENTENCE (ML) =================
-            if (expectedGesture === "SENTENCE") {
-              process(landmarks);
-            }
+      
+           if (
+  expectedGesture === "SENTENCE" ||
+  expectedGesture === "I_KNOW"
+) {
+  process(landmarks);
+}
 
             // ================= SIMPLE GESTURES =================
             else {
@@ -228,24 +242,26 @@ const [clicked, setClicked] = useState(false);
   }, [expectedGesture]);
 
   // ✅ HANDLE RESULT (SENTENCE ONLY)
-  const triggeredRef = useRef(false);
+ const triggeredRef = useRef(false);
 
-  useEffect(() => {
-    if (expectedGesture !== "SENTENCE") return;
-    if (triggeredRef.current) return;
+useEffect(() => {
+  if (triggeredRef.current) return;
 
-    if (result === "correct") {
-      triggeredRef.current = true;
-      onResult(true);
-    } else if (result === "incorrect") {
-      triggeredRef.current = true;
-      onResult(false);
-    }
-  }, [result]);
+  if (result === "correct") {
+    triggeredRef.current = true;
+    console.log("✅ PASS TRIGGERED");
+    onResult(true);
+  }
 
-  useEffect(() => {
-    triggeredRef.current = false;
-  }, [expectedGesture]);
+  if (result === "incorrect") {
+    triggeredRef.current = true;
+    onResult(false);
+  }
+}, [result]);
+
+useEffect(() => {
+  triggeredRef.current = false;
+}, [expectedGesture]);
   useEffect(() => {
   setClicked(false);
   latestGesture.current = null;
@@ -307,20 +323,17 @@ const [clicked, setClicked] = useState(false);
           className="w-64 h-[420px] object-contain mt-20"
         />
       </div>
-      {expectedGesture !== "SENTENCE" && (
+    {expectedGesture === "8" || expectedGesture === "0" ? (
   <button
-    onClick={() => {
-      setClicked(true);
-      checkGesture();
-    }}
+    onClick={checkGesture}
     disabled={clicked}
-    className={`mt-4 px-4 py-2 rounded-lg text-white transition
-      ${clicked ? "bg-gray-400" : "bg-purple-600 hover:bg-purple-700"}
+    className={`px-4 py-2 rounded-lg text-white transition
+      ${clicked ? "bg-purple-300 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"}
     `}
   >
     {clicked ? "Captured" : "Capture"}
   </button>
-)}
+) : null}
     </div>
   );
 };

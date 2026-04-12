@@ -9,7 +9,7 @@ export function predictGesture(model: any, tf: any, hist: any[][]) {
   const prediction = model.predict(tf.tensor([input]));
   const probs = prediction.dataSync();
 
-  const labels = ["WHAT", "YOUR", "NAME"];
+  const labels = ["WHAT", "YOUR", "NAME","I_KNOW"];
   const index = probs.indexOf(Math.max(...probs));
 
   return {

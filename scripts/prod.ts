@@ -282,7 +282,7 @@ await db.insert(schema.challengeOptions).values([
   {
     lessonId: lesson.id,
     type: "GESTURE",
-    question: "Show the sentence: WHAT IS YOUR NAME",
+    question: "Sign the sentence: What is Your Name?",
     expectedGesture: "SENTENCE",
     order: 1,
   },
@@ -292,7 +292,14 @@ await db.insert(schema.challengeOptions).values([
     question: "What does this sign mean?",
     imageSrc: "/signs/iknow.gif",
     order: 2,
-  }
+  },
+  {
+  lessonId: lesson.id,
+  type: "GESTURE",
+  question: "Show the sign for 'I KNOW'",
+  expectedGesture: "I_KNOW",
+  order: 3,
+}
   ]).returning();
 
   await db.insert(schema.challengeOptions).values([
@@ -317,6 +324,13 @@ await db.insert(schema.challengeOptions).values([
     challengeId: challenges[1].id,
     text: " I Remember",
     correct: false,
+  }
+]);
+await db.insert(schema.challengeOptions).values([
+  {
+    challengeId: challenges[2].id,
+    text: "I_KNOW",
+    correct: true,
   }
 ]);
         }
